@@ -1,6 +1,5 @@
-package com.belajar.text_summarizer.ui.theme
+package com.belajar.text_summarizer.core.designSystem.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

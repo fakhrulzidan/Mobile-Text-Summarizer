@@ -1,4 +1,4 @@
-package com.belajar.text_summarizer.ui.theme
+package com.belajar.text_summarizer.core.designSystem.theme
 
 import androidx.compose.ui.graphics.Color
 
