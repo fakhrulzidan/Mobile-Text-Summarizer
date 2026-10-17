@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Text-Summarizer</string>
+    <string name="header">Ringkas Teks</string>
+    <string name="sub_heading">Masukkan Teks. App meringkas teks yang anda masukkan.</string>
+    <string name="text">Teks</string>
+    <string name="paste">Tempel</string>
+    <string name="num_word">Jumlah Kalimat Ringkasan</string>
+    <string name="summary">Ringkas</string>
+    <string name="summary_result">Hasil Ringkasan</string>
+    <string name="copy">Salin</string>
 </resources>

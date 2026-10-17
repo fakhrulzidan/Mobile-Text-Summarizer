@@ -1,4 +1,4 @@
-package com.belajar.text_summarizer
+package com.belajar.text_summarizer.features.summarizer.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

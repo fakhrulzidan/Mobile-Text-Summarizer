@@ -1,4 +1,4 @@
-package com.belajar.text_summarizer
+package com.belajar.text_summarizer.features.summarizer.data.remote.dto
 
 data class SummaryRequest(
     val text : String,

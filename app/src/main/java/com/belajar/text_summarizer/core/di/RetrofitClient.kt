@@ -1,5 +1,6 @@
-package com.belajar.text_summarizer.network
+package com.belajar.text_summarizer.core.di
 
+import com.belajar.text_summarizer.features.summarizer.data.remote.ApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
