@@ -68,7 +68,9 @@ import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun InputScreen(){
+fun InputScreen(
+    onNavigateToResult: () -> Unit
+){
     var inputText by remember { mutableStateOf("") }
     var summarizedText by remember { mutableStateOf("") }
     val clipboardManager = LocalClipboardManager.current
@@ -192,17 +194,19 @@ fun InputScreen(){
         SliderWord()
         Spacer(modifier = Modifier.weight(1f))
         Button(
-            onClick = { corutineScope.launch{
-                try {
-                    val request = SummaryRequest(inputText, 3)
-                    val respon = RetrofitClient.instance.summarize(request)
-                    summarizedText = respon.summary
-                    showTranslation = true
-                } catch (e:Exception){
-                    summarizedText="Error: ${e.message}"
-                    showTranslation= true
-                }
-            } },
+            onClick = { onNavigateToResult()
+//                corutineScope.launch{
+//                try {
+//                    val request = SummaryRequest(inputText, 3)
+//                    val respon = RetrofitClient.instance.summarize(request)
+//                    summarizedText = respon.summary
+//                    showTranslation = true
+//                } catch (e:Exception){
+//                    summarizedText="Error: ${e.message}"
+//                    showTranslation= true
+//                }
+//            }
+                      },
             colors = ButtonColors(
                 containerColor = purple,
                 contentColor = whiteBg,
@@ -224,7 +228,7 @@ fun InputScreen(){
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = stringResource(R.string.summary),
+                text = stringResource(R.string.summarize),
                 color = whiteBg,
                 fontSize = 16.sp,
                 style = Typography.labelMedium
@@ -258,5 +262,7 @@ fun InputScreen(){
 @Preview
 @Composable
 fun InputScreenPreview(){
-    InputScreen()
+    InputScreen(
+        onNavigateToResult = {}
+    )
 }

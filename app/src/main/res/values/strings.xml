@@ -5,7 +5,9 @@
     <string name="text">Teks</string>
     <string name="paste">Tempel</string>
     <string name="num_word">Jumlah Kalimat Ringkasan</string>
-    <string name="summary">Ringkas</string>
+    <string name="summarize">Ringkas</string>
     <string name="summary_result">Hasil Ringkasan</string>
     <string name="copy">Salin</string>
+    <string name="real">Asli</string>
+    <string name="summary">Ringkasan</string>
 </resources>
