@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,11 +28,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.belajar.text_summarizer.R
 import com.belajar.text_summarizer.core.designSystem.theme.Typography
+import com.belajar.text_summarizer.core.designSystem.theme.mainBg
 import com.belajar.text_summarizer.core.designSystem.theme.mainText
+import com.belajar.text_summarizer.core.designSystem.theme.purple
 import com.belajar.text_summarizer.core.designSystem.theme.purpleGrey
 import com.belajar.text_summarizer.core.designSystem.theme.whiteBg
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SliderWord(){
     var sliderPosition by remember{ mutableStateOf(0f) }
@@ -59,10 +64,10 @@ fun SliderWord(){
             value = sliderPosition,
             onValueChange = {sliderPosition = it.roundToInt().toFloat()},
             colors = SliderColors(
-                thumbColor = Color.Red,
-                activeTrackColor = Color.Cyan,
-                activeTickColor = Color.Blue,
-                inactiveTrackColor = Color.Black,
+                thumbColor = purple,
+                activeTrackColor = purpleGrey,
+                activeTickColor = purple,
+                inactiveTrackColor = purpleGrey,
                 inactiveTickColor = Color.White,
                 disabledThumbColor = Color.Blue,
                 disabledActiveTrackColor = Color.Blue,

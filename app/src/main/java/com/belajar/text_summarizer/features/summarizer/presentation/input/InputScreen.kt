@@ -1,6 +1,7 @@
 package com.belajar.text_summarizer.features.summarizer.presentation.input
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -27,6 +30,7 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -55,14 +60,30 @@ import com.belajar.text_summarizer.core.designSystem.theme.purpleGrey
 import com.belajar.text_summarizer.core.designSystem.theme.secondText
 import com.belajar.text_summarizer.core.designSystem.theme.sourceSerifFamily
 import com.belajar.text_summarizer.core.designSystem.theme.whiteBg
+import com.belajar.text_summarizer.core.di.RetrofitClient
+import com.belajar.text_summarizer.features.summarizer.data.remote.dto.SummaryRequest
 import com.belajar.text_summarizer.features.summarizer.presentation.components.SliderWord
+import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun InputScreen(){
-    var inputText by remember { mutableStateOf("Tidak ada double padding: Padding akan murni mengikuti Modifier.padding(16.dp) yang kamu berikan di Column") }
+    var inputText by remember { mutableStateOf("") }
+    var summarizedText by remember { mutableStateOf("") }
     val clipboardManager = LocalClipboardManager.current
-    var onClick by remember { mutableStateOf(false) }
+    val corutineScope = rememberCoroutineScope()
+    var showTranslation by remember { mutableStateOf(false) }
+
+    val charCount = inputText.length
+
+    // Hitung jumlah kata (tambahkan pengecekan agar jika kosong tidak terhitung 1 kata)
+    val wordCount = if (inputText.trim().isEmpty()) {
+        0
+    } else {
+        inputText.trim().split("\\s+".toRegex()).size
+    }
+
     Column (
         modifier = Modifier
             .background(mainBg)
@@ -159,7 +180,7 @@ fun InputScreen(){
                         )
                     }
                     Text(
-                        text = "47 kata, 276 karakter",
+                        text = "$charCount kata, $wordCount karakter",
                         style = Typography.labelMedium,
                         fontSize = 15.sp,
                         color = secondText
@@ -169,19 +190,29 @@ fun InputScreen(){
         }
         Spacer(modifier = Modifier.height(21.dp))
         SliderWord()
+        Spacer(modifier = Modifier.weight(1f))
         Button(
-            onClick = {onClick=onClick},
+            onClick = { corutineScope.launch{
+                try {
+                    val request = SummaryRequest(inputText, 3)
+                    val respon = RetrofitClient.instance.summarize(request)
+                    summarizedText = respon.summary
+                    showTranslation = true
+                } catch (e:Exception){
+                    summarizedText="Error: ${e.message}"
+                    showTranslation= true
+                }
+            } },
             colors = ButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = purple,
-                disabledContainerColor = purple,
-                disabledContentColor = purple
+                containerColor = purple,
+                contentColor = whiteBg,
+                disabledContainerColor = purpleGrey,
+                disabledContentColor = whiteBg
             ),
-            border = BorderStroke(width = 1.dp,color = purple),
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
+                .height(50.dp)
                 .fillMaxWidth(),
-
         ) {
             Icon(
                 imageVector = AppIcon.summary,
@@ -195,9 +226,30 @@ fun InputScreen(){
             Text(
                 text = stringResource(R.string.summary),
                 color = whiteBg,
-                fontSize = 21.sp,
+                fontSize = 16.sp,
                 style = Typography.labelMedium
             )
+        }
+        Spacer(modifier = Modifier.height(21.dp))
+        if(showTranslation){
+            Box (
+                modifier = Modifier
+                    .background(color = colorResource(R.color.white),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+            ){
+                OutlinedTextField(
+                    value = summarizedText,
+                    onValueChange = {
+                        summarizedText = it
+                    },
+                    maxLines = 6,
+                    singleLine = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }
         }
     }
 }
