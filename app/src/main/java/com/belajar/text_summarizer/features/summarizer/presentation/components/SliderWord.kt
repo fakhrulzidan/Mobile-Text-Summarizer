@@ -37,8 +37,10 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SliderWord(){
-    var sliderPosition by remember{ mutableStateOf(0f) }
+fun SliderWord(
+    sliderValue: Int,
+    onValueChange: (Int) -> Unit
+){
     Column(
 
     ) {
@@ -54,15 +56,15 @@ fun SliderWord(){
                 color = mainText
             )
             Text(
-                text = sliderPosition.toInt().toString(),
+                text = sliderValue.toString(),
                 style = Typography.labelMedium,
                 fontSize = 15.sp,
                 color = mainText
             )
         }
         Slider(
-            value = sliderPosition,
-            onValueChange = {sliderPosition = it.roundToInt().toFloat()},
+            value = sliderValue.toFloat(),
+            onValueChange = {onValueChange(it.roundToInt())},
             colors = SliderColors(
                 thumbColor = purple,
                 activeTrackColor = purpleGrey,
@@ -102,5 +104,8 @@ fun SliderWord(){
 @Preview
 @Composable
 fun SilderPreview(){
-    SliderWord()
+    SliderWord(
+        sliderValue = 4,
+        onValueChange = {}
+    )
 }

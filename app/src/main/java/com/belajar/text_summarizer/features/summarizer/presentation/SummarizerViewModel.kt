@@ -1,5 +1,8 @@
 package com.belajar.text_summarizer.features.summarizer.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
@@ -8,6 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class SummarizerViewModel : ViewModel() {
+
+    var sliderValue by mutableStateOf(1)
 
     private val _inputText = MutableStateFlow("")
     val inputText: StateFlow<String> = _inputText

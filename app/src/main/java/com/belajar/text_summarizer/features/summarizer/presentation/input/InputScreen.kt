@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -49,6 +50,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.belajar.text_summarizer.R
 import com.belajar.text_summarizer.core.designSystem.theme.AppIcon
 import com.belajar.text_summarizer.core.designSystem.theme.Typography
@@ -62,24 +65,23 @@ import com.belajar.text_summarizer.core.designSystem.theme.sourceSerifFamily
 import com.belajar.text_summarizer.core.designSystem.theme.whiteBg
 import com.belajar.text_summarizer.core.di.RetrofitClient
 import com.belajar.text_summarizer.features.summarizer.data.remote.dto.SummaryRequest
+import com.belajar.text_summarizer.features.summarizer.presentation.SummarizerViewModel
 import com.belajar.text_summarizer.features.summarizer.presentation.components.SliderWord
 import kotlinx.coroutines.launch
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun InputScreen(
-    onNavigateToResult: () -> Unit
+    onNavigateToResult: (String, String) -> Unit,
+    viewModel: SummarizerViewModel
 ){
     var inputText by remember { mutableStateOf("") }
-    var summarizedText by remember { mutableStateOf("") }
     val clipboardManager = LocalClipboardManager.current
     val corutineScope = rememberCoroutineScope()
-    var showTranslation by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val charCount = inputText.length
 
-    // Hitung jumlah kata (tambahkan pengecekan agar jika kosong tidak terhitung 1 kata)
     val wordCount = if (inputText.trim().isEmpty()) {
         0
     } else {
@@ -117,7 +119,8 @@ fun InputScreen(
                 .background(color = whiteBg)
                 .border(
                     border = BorderStroke(1.dp, color = secondText),
-                    shape = RoundedCornerShape(20.dp)),
+                    shape = RoundedCornerShape(20.dp)
+                ),
         ){
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -191,21 +194,25 @@ fun InputScreen(
             }
         }
         Spacer(modifier = Modifier.height(21.dp))
-        SliderWord()
+        SliderWord(sliderValue = viewModel.sliderValue,
+            onValueChange = {viewModel.sliderValue = it})
         Spacer(modifier = Modifier.weight(1f))
         Button(
-            onClick = { onNavigateToResult()
-//                corutineScope.launch{
-//                try {
-//                    val request = SummaryRequest(inputText, 3)
-//                    val respon = RetrofitClient.instance.summarize(request)
-//                    summarizedText = respon.summary
-//                    showTranslation = true
-//                } catch (e:Exception){
-//                    summarizedText="Error: ${e.message}"
-//                    showTranslation= true
-//                }
-//            }
+            onClick = {
+                if (inputText.isNotBlank() && !isLoading){
+                    isLoading = true
+                    corutineScope.launch {
+                        try {
+                            val request = SummaryRequest(inputText, viewModel.sliderValue)
+                            val respon = RetrofitClient.instance.summarize(request)
+                            isLoading = false
+                            onNavigateToResult(inputText, respon.summary)
+                        } catch (e: Exception){
+                            isLoading = false
+                            onNavigateToResult(inputText, "Error: ${e.message}")
+                        }
+                    }
+                }
                       },
             colors = ButtonColors(
                 containerColor = purple,
@@ -218,43 +225,31 @@ fun InputScreen(
                 .height(50.dp)
                 .fillMaxWidth(),
         ) {
-            Icon(
-                imageVector = AppIcon.summary,
-                contentDescription = null,
-                tint = whiteBg,
-                modifier = Modifier
-                    .size(15.dp)
-                    .align(Alignment.CenterVertically)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = stringResource(R.string.summarize),
-                color = whiteBg,
-                fontSize = 16.sp,
-                style = Typography.labelMedium
-            )
-        }
-        Spacer(modifier = Modifier.height(21.dp))
-        if(showTranslation){
-            Box (
-                modifier = Modifier
-                    .background(color = colorResource(R.color.white),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-            ){
-                OutlinedTextField(
-                    value = summarizedText,
-                    onValueChange = {
-                        summarizedText = it
-                    },
-                    maxLines = 6,
-                    singleLine = false,
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = whiteBg,
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = AppIcon.summary,
+                    contentDescription = null,
+                    tint = whiteBg,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
+                        .size(15.dp)
+                        .align(Alignment.CenterVertically)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = stringResource(R.string.summarize),
+                    color = whiteBg,
+                    fontSize = 16.sp,
+                    style = Typography.labelMedium
                 )
             }
         }
+        Spacer(modifier = Modifier.height(21.dp))
     }
 }
 
@@ -263,6 +258,7 @@ fun InputScreen(
 @Composable
 fun InputScreenPreview(){
     InputScreen(
-        onNavigateToResult = {}
+        onNavigateToResult = { inputText, result -> },
+        viewModel = viewModel()
     )
 }

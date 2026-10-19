@@ -1,40 +1,47 @@
 package com.belajar.text_summarizer.features.summarizer.presentation.Navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.belajar.text_summarizer.features.summarizer.presentation.SummarizerViewModel
 import com.belajar.text_summarizer.features.summarizer.presentation.input.InputScreen
 import com.belajar.text_summarizer.features.summarizer.presentation.result.ResultScreen
 
 @Composable
 fun AppNavigation() {
-    // 1. Inisialisasi pengontrol navigasi
     val navController = rememberNavController()
 
-    // 2. Buat NavHost dan tentukan layar pertama (startDestination)
     NavHost(navController = navController, startDestination = "input_screen") {
-
-        // Daftarkan InputScreen
         composable("input_screen") {
+            val viewModel: SummarizerViewModel = viewModel()
             InputScreen(
-                onNavigateToResult = {
-                    // Berpindah ke ResultScreen saat tombol diklik
+                onNavigateToResult = { originalText, summaryText ->
+                    // Simpan data teks yang panjang dengan aman ke memori navigasi
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        "original",
+                        originalText
+                    )
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        "summary",
+                        summaryText
+                    )
                     navController.navigate("result_screen")
-                }
+                },
+                viewModel = viewModel
             )
         }
 
-        // Daftarkan ResultScreen
         composable("result_screen") {
+            // Ambil data dari layar sebelumnya
+            val originalText = navController.previousBackStackEntry?.savedStateHandle?.get<String>("original") ?: ""
+            val summaryText = navController.previousBackStackEntry?.savedStateHandle?.get<String>("summary") ?: ""
+
             ResultScreen(
-                onBackClick = {
-                    // Kembali ke layar sebelumnya (InputScreen)
-                    navController.popBackStack()
-                },
-                // Sementara isi dengan nilai dummy (nanti bisa diganti dengan data asli dari API)
-                realText = 1f,
-                summaryText = 0.6f
+                onBackClick = { navController.popBackStack() },
+                originalText = originalText, // Lempar ke ResultScreen
+                summaryText = summaryText
             )
         }
     }

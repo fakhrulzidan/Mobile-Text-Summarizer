@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
     //REPLACE NGROK_FORWARDING AFTER RUN: ngrok http 5000
-    private const val BASE_URL = "https://NGROK-FORWARDING.ngrok-free.app/"
+    private const val BASE_URL = "https://a77d-180-254-105-168.ngrok-free.app/"
 
     val instance: ApiService by lazy {
         Retrofit.Builder()

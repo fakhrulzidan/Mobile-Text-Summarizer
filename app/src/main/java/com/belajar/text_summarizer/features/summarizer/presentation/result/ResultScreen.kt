@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,42 +54,35 @@ import com.belajar.text_summarizer.features.summarizer.presentation.components.A
 @Composable
 fun ResultScreen(
     onBackClick: () -> Unit,
-    realText: Float,
-    summaryText: Float,
+    originalText: String,
+    summaryText: String,
 ){
-    var summarizedText by remember { mutableStateOf("") }
-    var inputText by remember { mutableStateOf("") }
+    val originalWordCount = if (originalText.trim().isEmpty()) 0 else originalText.trim().split("\\s+".toRegex()).size
+    val summaryWordCount = if (summaryText.trim().isEmpty()) 0 else summaryText.trim().split("\\s+".toRegex()).size
+
+//    var summarizedText by remember { mutableStateOf("") }
+//    var inputText by remember { mutableStateOf("") }
     val clipboardManager = LocalClipboardManager.current
+    var editableSummaryText by remember { mutableStateOf(summaryText) }
 
-    val realWordCount = if (inputText.trim().isEmpty()) {
-        0
-    } else {
-        inputText.trim().split("\\s+".toRegex()).size
+
+    val realSentenceCount = if (originalText.trim().isEmpty()) 0 else{
+        originalText.split(Regex("[.!?]+")).filter { it.isNotBlank() }.size
     }
-    val summaryWordCount = if (summarizedText.trim().isEmpty()) {
-        0
-    } else {
-        summarizedText.trim().split("\\s+".toRegex()).size
-    }
-    val realSentenceCount = if (inputText.trim().isEmpty()) {
-        0
-    } else {
-        // Memecah teks berdasarkan titik, tanda seru, atau tanda tanya
-        inputText.split(Regex("[.!?]+")).filter { it.isNotBlank() }.size
-    }
-    val summarizedSentenceCount = if (summarizedText.trim().isEmpty()) {
-        0
-    } else {
-        // Memecah teks berdasarkan titik, tanda seru, atau tanda tanya
-        summarizedText.split(Regex("[.!?]+")).filter { it.isNotBlank() }.size
-    }
-    val percentageReduced = if (realWordCount == 0) {
-        0.0 // Mencegah error pembagian dengan nol (Divide by Zero)
-    } else {
-        ((realWordCount - summaryWordCount).toDouble() / realWordCount) * 100
+    val summarizeSentenceCount = if (summaryText.trim().isEmpty()) 0 else {
+        summaryText.split(Regex("[.!?]+")).filter { it.isNotBlank() }.size
     }
 
-    val formattedPercentage = String.format(java.util.Locale("id", "ID"), "%.1f", percentageReduced)
+    val percentageReduce = if (originalWordCount == 0) 0.0 else{
+        ((originalWordCount-summaryWordCount).toDouble()/summaryWordCount)*100
+    }
+    val formattedPercentage = String.format(java.util.Locale("id", "ID"), "%.1f", percentageReduce)
+
+    val originalProgress = 1f
+    val summaryProgress = if (originalWordCount == 0) 0f else{
+        summaryWordCount.toFloat()/originalWordCount.toFloat()
+    }
+
     Scaffold (
         containerColor = mainBg,
         topBar = {
@@ -133,7 +127,7 @@ fun ResultScreen(
                             modifier = Modifier.width(70.dp)
                         )
                         LinearProgressIndicator(
-                            progress = {realText},
+                            progress = {originalProgress},
                             modifier = Modifier
                                 .weight(1f)
                                 .height(10.dp)
@@ -142,7 +136,7 @@ fun ResultScreen(
                             trackColor = whiteBg
                         )
                         Text(
-                            text = "$realWordCount kata",
+                            text = "$originalWordCount kata",
                             style = Typography.labelMedium,
                             fontSize = 14.sp,
                             color = mainText
@@ -161,7 +155,7 @@ fun ResultScreen(
                             modifier = Modifier.width(70.dp)
                         )
                         LinearProgressIndicator(
-                            progress = {summaryText},
+                            progress = {summaryProgress},
                             modifier = Modifier
                                 .weight(1f)
                                 .height(10.dp)
@@ -199,8 +193,8 @@ fun ResultScreen(
                     ) {
 
                         BasicTextField(
-                            value = summarizedText,
-                            onValueChange = {summarizedText = it},
+                            value = editableSummaryText,
+                            onValueChange = { editableSummaryText = it },
                             maxLines = 10,
                             textStyle = Typography.bodyMedium.copy(
                                 fontSize = 16.sp,
@@ -219,9 +213,7 @@ fun ResultScreen(
                         ){
                             Button (
                                 onClick = {
-                                    clipboardManager.getText()?.text?.let { copyText ->
-                                        summarizedText = copyText
-                                    }
+                                    clipboardManager.setText(AnnotatedString(editableSummaryText))
                                 },
                                 colors = ButtonColors(
                                     containerColor = purple,
@@ -248,6 +240,12 @@ fun ResultScreen(
                     color = secondText,
                     fontSize = 18.sp
                 )
+                Text(
+                    text = originalText,
+                    style = Typography.bodyMedium,
+                    color = mainText,
+                    fontSize = 15.sp
+                )
             }
         }
     }
@@ -258,7 +256,7 @@ fun ResultScreen(
 fun ResultScreenPreview(){
     ResultScreen(
         onBackClick = {},
-        realText = 0.45f,
-        summaryText = 0.20f
+        originalText = "Alurnya begini: OpenCode mengirim request, lalu 9Router memprosesnya sebelum meneruskan ke provider, dan memproses jawabannya sebelum dikembalikan. Skill dan plugin berbeda karena keduanya dipasang di sisi CLI (Claude Code, OpenCode, dll.), sedangkan Token Saver bekerja di sisi proxy. Jadi berlaku untuk semua CLI yang lewat 9Router tanpa mengubah apa pun di CLI-nya.",
+        summaryText = "Alurnya begini: OpenCode mengirim request, lalu 9Router memprosesnya sebelum meneruskan ke provider, dan memproses jawabannya sebelum dikembalikan. Skill dan plugin berbeda karena keduanya dipasang di sisi CLI (Claude Code, OpenCode, dll.), sedangkan Token Saver bekerja di sisi proxy."
     )
 }
