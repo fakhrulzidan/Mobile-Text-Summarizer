@@ -5,7 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
+import com.belajar.text_summarizer.core.di.RetrofitClient
+import com.belajar.text_summarizer.features.summarizer.data.remote.dto.SummaryRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,25 +16,43 @@ class SummarizerViewModel : ViewModel() {
     var sliderValue by mutableStateOf(1)
 
     private val _inputText = MutableStateFlow("")
-    val inputText: StateFlow<String> = _inputText
-
-    private val _summarizedText = MutableStateFlow("")
-    val summarizedText: StateFlow<String> = _summarizedText
+    var inputText: StateFlow<String> = _inputText
 
     fun onInputChange(newText: String) {
         _inputText.value = newText
     }
 
-    fun summarize() {
+    private val _summarizedText = MutableStateFlow("")
+    val summarizedText: StateFlow<String> = _summarizedText
+
+    fun clearSummary(){
+        _summarizedText.value = ""
+    }
+
+    var loadingBtnSummary by mutableStateOf(false)
+
+
+    fun summarize(){
+        if (_inputText.value.isBlank() || loadingBtnSummary) return
+        clearError()
+
         viewModelScope.launch {
-            // Misalnya model lokal / API call
-            val result = dummySummarize(_inputText.value)
-            _summarizedText.value = result
+            loadingBtnSummary = true
+            try {
+                _summarizedText.value =RetrofitClient.instance
+                    .summarize(SummaryRequest(_inputText.value, sliderValue))
+                    .summary
+            } catch (e: Exception){
+                errorMessage = "Error: ${e.message}"
+            } finally {
+                loadingBtnSummary = false
+            }
         }
     }
 
-    private suspend fun dummySummarize(input: String): String {
-        delay(1000) // simulasi proses
-        return "Hasil ringkasan dari: \"$input\""
+    var errorMessage by mutableStateOf<String?>(null)
+    fun clearError(){
+        errorMessage = null
     }
+
 }

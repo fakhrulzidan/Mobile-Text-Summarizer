@@ -30,6 +30,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateListOf
@@ -75,10 +77,10 @@ fun InputScreen(
     onNavigateToResult: (String, String) -> Unit,
     viewModel: SummarizerViewModel
 ){
-    var inputText by remember { mutableStateOf("") }
+    val inputText by viewModel.inputText.collectAsState()
+    val summaryText by viewModel.summarizedText.collectAsState()
     val clipboardManager = LocalClipboardManager.current
-    val corutineScope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(false) }
+    val isLoading = viewModel.loadingBtnSummary
 
     val charCount = inputText.length
 
@@ -86,6 +88,15 @@ fun InputScreen(
         0
     } else {
         inputText.trim().split("\\s+".toRegex()).size
+    }
+
+    val errorMessage = viewModel.errorMessage
+
+    LaunchedEffect (summaryText){
+        if(summaryText.isNotBlank()){
+            onNavigateToResult(inputText, summaryText)
+            viewModel.clearSummary()
+        }
     }
 
     Column (
@@ -134,7 +145,7 @@ fun InputScreen(
                 )
                 BasicTextField(
                     value = inputText,
-                    onValueChange = {inputText = it},
+                    onValueChange = viewModel::onInputChange,
                     maxLines = 10,
                     textStyle = Typography.bodyMedium.copy(
                         fontSize = 16.sp,
@@ -154,7 +165,7 @@ fun InputScreen(
                     Button (
                         onClick = {
                             clipboardManager.getText()?.text?.let { pastedText ->
-                                inputText += pastedText
+                                viewModel.onInputChange(inputText + pastedText)
                             }
                         },
                         colors = ButtonColors(
@@ -198,22 +209,7 @@ fun InputScreen(
             onValueChange = {viewModel.sliderValue = it})
         Spacer(modifier = Modifier.weight(1f))
         Button(
-            onClick = {
-                if (inputText.isNotBlank() && !isLoading){
-                    isLoading = true
-                    corutineScope.launch {
-                        try {
-                            val request = SummaryRequest(inputText, viewModel.sliderValue)
-                            val respon = RetrofitClient.instance.summarize(request)
-                            isLoading = false
-                            onNavigateToResult(inputText, respon.summary)
-                        } catch (e: Exception){
-                            isLoading = false
-                            onNavigateToResult(inputText, "Error: ${e.message}")
-                        }
-                    }
-                }
-                      },
+            onClick = {viewModel.summarize()},
             colors = ButtonColors(
                 containerColor = purple,
                 contentColor = whiteBg,
@@ -248,6 +244,13 @@ fun InputScreen(
                     style = Typography.labelMedium
                 )
             }
+        }
+        errorMessage?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                style = Typography.labelMedium
+            )
         }
         Spacer(modifier = Modifier.height(21.dp))
     }
